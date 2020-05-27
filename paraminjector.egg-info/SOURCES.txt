@@ -1,0 +1,15 @@
+README.rst
+setup.py
+paraminjector/TODO.md
+paraminjector/__init__.py
+paraminjector/_injector.py
+paraminjector/annotations.py
+paraminjector/dynamic.py
+paraminjector/exceptions.py
+paraminjector/static.py
+paraminjector/typed_callable.py
+paraminjector.egg-info/PKG-INFO
+paraminjector.egg-info/SOURCES.txt
+paraminjector.egg-info/dependency_links.txt
+paraminjector.egg-info/requires.txt
+paraminjector.egg-info/top_level.txt
