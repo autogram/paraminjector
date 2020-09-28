@@ -1,4 +1,4 @@
-name: Publish autogram-commons
+name: Publish
 
 on:
   release:

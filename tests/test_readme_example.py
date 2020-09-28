@@ -1,22 +1,3 @@
-# Paraminjector
-
-This Python library allows you to define a set of parameters and their types which will be available to be passed into
-any (third party) user-defined function based on type annotations. This behavior is also referred to as
-"argument injection", "autowiring", "magic arguments", and many others.
-Most likely you will want to use `paraminjector` as part of a library that expects its users to define functions
-with variable parameters that are supposed to be provided automatically if present.
-
-## Installation
-
-`pip install paraminjector`
-
-
-## Usage
-
-Dynamic injection works as follows:
-
-```python
-
 from typing import *
 
 
@@ -52,9 +33,6 @@ fixed_positional_arguments: Tuple = (3,)
 # Call the user-defined callback with all known parameters injected as arguments
 call_with_args(user_defined_callback, available_args, fixed_positional_arguments)
 
-```
 
-Apart from `call_with_args`, there are also `call_with_args_async` for coroutines and `call_with_args_maybe_async`
-for cases where you want to allow either a regular function or a coroutine.
-
-
+def test_run():
+    call_with_args(user_defined_callback, available_args, fixed_positional_arguments)
