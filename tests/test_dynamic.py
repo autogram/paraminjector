@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Union
 
 import pytest
 
@@ -81,3 +82,20 @@ def test_subclass_as_annotation_for_fixed_pos_arg_raises():
         call_with_args(cb, {type(None): None}, fixed_pos_args=(AFoo(),))
 
     assert ex.match(r".*should always be a supertype.*")
+
+
+def test_union_type_injects_only_possibility_int():
+    def cb(a: Union[int, str]):
+        assert isinstance(a, int)
+
+    call_with_args(cb, {int: 1})
+
+
+def test_union_type_raises_for_multiple_possibilities():
+    def cb(a: Union[int, str]):
+        assert isinstance(a, int)
+
+    with pytest.raises(ValueError) as ex:
+        call_with_args(cb, {int: 1, str: "str"})
+
+    assert ex.match(r".*Found more than one possible target for parameter.*a: Union.*")

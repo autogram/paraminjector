@@ -1,4 +1,6 @@
 import inspect
+import traceback
+
 import itertools
 from inspect import _empty
 from typing import Any, Tuple, Type, Union, Dict, cast
@@ -7,14 +9,14 @@ from paraminjector.typed_callable import TypedCallable
 from paraminjector.exceptions import FunctionSignatureInvalid
 
 
-def _analyze_signature(
+def analyze_signature(
     func: TypedCallable,
     available_args: Dict[Type, object],
     fixed_pos_args: Tuple[Any] = None,
     follow_wrapped: bool = True,
 ) -> Dict[str, object]:
     if fixed_pos_args is not None:
-        params_to_inject = _get_detected_params(func, available_args, fixed_pos_args)
+        params_to_inject = get_detected_params(func, available_args, fixed_pos_args)
     else:
         params_to_inject = func.signature.parameters
 
@@ -23,12 +25,20 @@ def _analyze_signature(
     for param_name, parameter in params_to_inject.items():
         parameter = cast(inspect.Parameter, parameter)
 
+        # account for union type
+        annotated_types = (
+            type_args
+            if (type_args := getattr(parameter.annotation, "__args__", None))
+            else parameter.annotation
+        )
+
         # TODO: add try catch for "TypeError: Subscripted generics cannot be used with class and instance checks"
-        possible_targets = [
-            a for a in available_args if issubclass(a, parameter.annotation)
-        ]
+        possible_targets = [a for a in available_args if issubclass(a, annotated_types)]
 
         if len(possible_targets) > 1:
+
+            # TODO: this is gonna happen
+
             raise ValueError(
                 f"Found more than one possible target for parameter {parameter.__repr__()}:"
                 f" {possible_targets}"
@@ -44,22 +54,20 @@ def _analyze_signature(
 
         target = possible_targets[0]
 
-        param = _find_contravariant_argument(available_args, parameter.annotation)
+        param = _find_contravariant_argument(available_args, target)
 
         if param is not inspect._empty:
             result[param_name] = param
         else:
             if parameter.default == inspect.Parameter.empty:
-                raise ValueError(
-                    "Non-default parameter in callback signature whose type blabla"
-                )
+                raise ValueError("Non-default parameter in callback signature whose type blabla")
             else:
                 pass  # ignore
 
     return result
 
 
-def _get_detected_params(
+def get_detected_params(
     func: TypedCallable, available_args: Dict[Type, object], fixed_pos_args: Tuple[Any]
 ) -> Dict[str, inspect.Parameter]:
 
@@ -77,20 +85,22 @@ def _get_detected_params(
     for n, pos_arg in enumerate(fixed_pos_args):
         name, param = param_kv_pairs[n]
 
-        if param.annotation:
-            if not issubclass(type(pos_arg), param.annotation):
+        # TODO: How can pos_arg be None? Write test!
+
+        try:
+            if param.annotation and not issubclass(type(pos_arg), param.annotation):
                 raise FunctionSignatureInvalid(
                     func,
                     f"Argument {n} to {func.name} should always be a supertype of "
                     f"{type(pos_arg)}.",
                 )
+        except TypeError as e:
+            traceback.print_exc()
 
     try:
         return {
             k: v
-            for k, v in itertools.islice(
-                func.signature.parameters.items(), n_fixed, n_declared
-            )
+            for k, v in itertools.islice(func.signature.parameters.items(), n_fixed, n_declared)
         }
     except KeyError:
         raise FunctionSignatureInvalid("lala TODO")

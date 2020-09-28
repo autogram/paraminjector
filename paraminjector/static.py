@@ -39,7 +39,7 @@ from pprint import pprint
 from typing import Callable, Type, Union, Dict, cast
 
 from paraminjector.typed_callable import TypedCallable
-from paraminjector._injector import _find_contravariant_argument, _analyze_signature
+from paraminjector._injector import _find_contravariant_argument, analyze_signature
 
 
 class ParamInjector:
@@ -60,7 +60,7 @@ class ParamInjector:
             available_args:
         """
         self.func = func
-        _analyze_signature(
+        analyze_signature(
             TypedCallable(func),
             available_args=available_args,
             fixed_pos_args=fixed_pos_args,
@@ -68,9 +68,7 @@ class ParamInjector:
         )
         self.available_references = available_args
 
-    def map_kwargs(
-        self, callback: Callable, follow_wrapped: bool = True
-    ) -> Dict[str, object]:
+    def map_kwargs(self, callback: Callable, follow_wrapped: bool = True) -> Dict[str, object]:
         sig = inspect.signature(callback, follow_wrapped=follow_wrapped)
 
         # pprint(sig.parameters)
@@ -83,9 +81,7 @@ class ParamInjector:
 
             # TODO: add try catch for "TypeError: Subscripted generics cannot be used with class and instance checks"
             possible_targets = [
-                a
-                for a in self.available_references
-                if issubclass(a, parameter.annotation)
+                a for a in self.available_references if issubclass(a, parameter.annotation)
             ]
 
             if len(possible_targets) > 1:
@@ -104,9 +100,7 @@ class ParamInjector:
 
             target = possible_targets[0]
 
-            param = _find_contravariant_argument(
-                self.available_references, parameter.annotation
-            )
+            param = _find_contravariant_argument(self.available_references, parameter.annotation)
             print(param)
 
             if param is not inspect._empty:
